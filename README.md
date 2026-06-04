@@ -20,3 +20,13 @@ Develop a modern data warehouse using SQL Server to consolidate sales data, enab
 -----------
 
 ### BI: ANALYTICS & REPORTING (WAITING) ---
+
+--------
+
+## License
+
+This project is licensed under the [MIT License].
+
+## About Me
+
+Hi there! I'm **Muhammad Bukhtawar Javed**. I'm a data analyst and love to get insinghts through data that help stakeholders to take decisions.
