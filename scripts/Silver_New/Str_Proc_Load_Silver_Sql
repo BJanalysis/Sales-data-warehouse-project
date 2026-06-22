@@ -1,0 +1,197 @@
+Create or Alter procedure Silver.Load_Silver AS
+BEGIN
+
+	-- 1
+	print '>>Truncate Table: silver.crm_cust_info:'
+	Truncate Table silver.crm_cust_info
+	print '>>Insering data into: silver.crm_cust_info:'
+	insert into silver.crm_cust_info (
+		cst_id,	
+		cst_key,	
+		cst_firstname,	
+		cst_lastname,	
+		cst_marital_status,	
+		cst_gndr,
+		cst_create_date
+	)
+	select 
+		cst_id, 
+		cst_key, 
+		TRIM(cst_firstname) AS cst_firstname,
+		TRIM(cst_lastname) AS cst_lastname,
+
+		CASE
+			when cst_marital_status = 'M' then 'Married'
+			when cst_marital_status = 'S' then 'Sinle'
+			else 'n/a'
+		end as cst_marital_status,
+
+		case 
+			when cst_gndr = 'M' then 'Male'
+			when cst_gndr = 'F' then 'Female'
+			else 'n/a'
+		end cst_gndr,
+		cst_create_date
+	from
+		(
+		select 
+			*, row_number() over (partition by cst_id order by cst_create_date desc) as FLAG 
+		from 
+			[bronze].[crm_cust_info]
+		) as sub
+		WHERE FLAG =1 AND cst_id IS NOT NULL	
+
+	---	2
+	print '>>Truncate Table: silver.[crm_prd_info]:'
+	truncate table [Silver].[crm_prd_info]
+	print '>>Insering data into: silver.crm_prd_info:'
+	insert into [Silver].[crm_prd_info]
+	 (
+		prd_id,
+		cat_id,	
+		prd_key,
+		prd_nm,
+		prd_cost,
+		prd_line,
+		prd_start_dt,
+		prd_end_dt
+	)
+
+	select
+		 prd_id,
+		 replace(substring(prd_key,1, 5), '-', '_') as cat_id,			-- derived column
+		 substring(prd_key,7, LEN (prd_key)) as prd_key,				-- extract prd_key
+		 prd_nm,
+		 ISNULL(prd_cost, 0 ) AS prd_cost,			-- if cost is null then 0, so aggregation will be smooth - easy
+	
+		 CASE UPPER(TRIM(prd_line))				-- standard and consistent
+			when 'M' then 'Mountain'
+			when 'R' then 'Road'
+			when 'S' then 'Other Sales'
+			when 'T' then 'Touring'
+			else 'n/a'
+		END as prd_line,						--
+
+	cast (prd_start_dt as date) as prd_start_dt,
+	cast (dateadd (day, -1, lead (prd_end_dt) over (partition by prd_key order by prd_start_dt)) as date) as prd_end_dt		--calculate end date as one day before the next start date
+	from 
+		[bronze].[crm_prd_info]
+
+	------ 3
+	print '>>Truncate Table: silver.[crm_sales_details]:'
+	truncate table [Silver].[crm_sales_details] 
+	print '>>Insering data into: silver.crm_sales_details:'
+	insert into [Silver].[crm_sales_details](
+		sls_ord_num,
+		sls_prd_key,
+		sls_cust_id,	
+		sls_order_dt,
+		sls_ship_dt,
+		sls_due_dt,
+		sls_sales,
+		sls_quantity,
+		sls_price
+	)
+
+	SELECT 
+		sls_ord_num,
+		sls_prd_key,
+		sls_cust_id,
+
+		case 
+			when sls_order_dt = 0 or len(sls_order_dt) != 8 then null	
+			else cast(cast (sls_order_dt as varchar) as date)
+		end  as sls_order_dt,
+
+		case 
+			when sls_ship_dt = 0 or len(sls_ship_dt) != 8 then null
+			else cast(cast (sls_ship_dt as varchar) as date)
+		end  as sls_ship_dt,
+
+		case 
+			when sls_due_dt = 0 or len(sls_due_dt) != 8 then null
+			else cast(cast (sls_due_dt as varchar) as date)
+		end  as sls_due_dt,
+
+		case
+			when sls_sales is null or sls_sales<=0 or sls_sales != sls_quantity * abs(sls_price)
+			then sls_quantity * abs(sls_price)
+			else sls_sales
+		end as sls_sales,
+
+		sls_quantity,
+
+		case
+			when sls_price is null or sls_price <= 0 
+			then sls_price/ nullif(sls_quantity, 0)
+			else sls_price
+		end as sls_price
+	FROM
+		[bronze].[crm_sales_details]
+
+
+	--4
+	print '>>Truncate Table: silver.[erp_CUST_AZ12]:'
+	truncate table  [Silver].[erp_CUST_AZ12]
+	print '>>Insering data into: silver.erp_CUST_AZ12:'
+	insert into [Silver].[erp_CUST_AZ12]
+	(
+	CID, BDATE, GEN
+	)
+
+	select
+		CASE 
+			WHEN CID LIKE 'NAS%' THEN substring(CID, 4, len(CID))	--we can't just do substract (4), because may there is no NAS at begining:
+			ELSE CID 
+		END CID,
+		case 
+			when BDATE > getdate() then null						-- Bdate should not be greate then today
+			else BDATE
+		end as bdate,
+		CASE	
+			when upper(trim(GEN)) in ('F', 'FEMALE') then 'Female'
+			when upper(trim(GEN)) in ('M', 'MALE') then 'Male'
+		Else  'N/A'
+		end as GEN
+	from [Bronze].[erp_CUST_AZ12]
+
+
+	--5
+	print '>>Truncate Table: silver.[erp_LOC_A101]:'
+	truncate table [Silver].[erp_LOC_A101] 
+	print '>>Insering data into: silver.erp_LOC_A101:'
+	insert into [Silver].[erp_LOC_A101]
+	(
+	CID, 
+	CNTRY
+	)
+
+	select 
+		REPLACE(CID, '-', '' ) AS CID,
+	case
+		when trim(CNTRY) = 'DE' THEN 'Germany'   -- data normalization
+		when trim(cntry) in ('US', 'USA') THEN 'United States'
+		when trim(cntry) = '' or cntry is null then 'n/a'	-- handling missing values
+		else trim(cntry) 
+	end as cntry
+	from [bronze].[erp_LOC_A101]
+
+
+	--6
+	print '>>Truncate Table: silver.[erp_PX_CAT_G1V2]:'
+	truncate table [Silver].[erp_PX_CAT_G1V2] 
+	print '>>Insering data into: silver.erp_PX_CAT_G1V2:'
+	insert into [Silver].[erp_PX_CAT_G1V2]
+
+	(
+	ID, CAT, SUBCAT,MAINTENANCE 
+	)
+
+	SELECT  
+		ID,
+		CAT, 
+		SUBCAT,
+		MAINTENANCE 
+	FROM [Bronze].[erp_PX_CAT_G1V2]
+
+END
