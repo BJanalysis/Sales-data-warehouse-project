@@ -9,7 +9,7 @@ Script purpose:
 
 */
 
--- silver Layer
+#-- silver Layer
 
 If OBJECT_id ('silver.crm_cust_info', 'U') is not null  -- check if table 'name' of table is present (inNotNull) then        -- U means user defined table
 	Drop table silver.crm_cust_info						-- Drop that table 	
