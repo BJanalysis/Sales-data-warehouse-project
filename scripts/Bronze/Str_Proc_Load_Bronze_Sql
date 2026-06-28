@@ -1,8 +1,27 @@
+/*
+===========================================================================
+Stored Procedure: Load Bronze Layer  
+===========================================================================
 
+Script Purpose:
+	The stored procedure performs the ETL (Extracr, Transform, Load) porcess  to 
+	populate the 'Bronze' schema tables from the 'local files' schema. 
+Actions performed.
+	- Truncate Bronze Tables
+	- Insert transformed and cleaned data from local into Bronze tables.
+
+Parameters:
+	None.
+	This Store procedure does not accpet any parameters or retuen any values.
+
+Usage quer:
+	Exec (Bronze.load.bronze) -name of stored procdure
+================================================================================================================================================
+*/
 ----------------------------------------------------------else
 
 
-create or alter procedure bronze2.load_bronze2 as
+create or alter procedure bronze.load_bronze as
 begin
 	Declare @start_time DATETIME, @end_time Datetime -- declared 2 variables with @ and assinged data types
 	begin try
@@ -15,11 +34,11 @@ begin
 		Print '-------------------------------------------------------'
 
 		set @start_time = getdate()
-		Print '>> Truncating Table: bronze2.crm_cust_info'
-		Truncate table bronze2.crm_cust_info
+		Print '>> Truncating Table: bronze.crm_cust_info'
+		Truncate table bronze.crm_cust_info
 
-		Print '>> Inserting data intp: bronze2.crm_cust_info'
-		BULK insert bronze2.crm_cust_info
+		Print '>> Inserting data intp: bronze.crm_cust_info'
+		BULK insert bronze.crm_cust_info
 		from 'D:\SQL Projects\Data warehousing\sql-data-warehouse-project\datasets\source_crm\cust_info.csv'
 		with (
 			Firstrow = 2,
@@ -32,11 +51,11 @@ begin
 
 			
 		set @start_time = getdate()
-		Print '>> Truncating Table: bronze2.crm_prd_info'
-		Truncate table bronze2.crm_prd_info
+		Print '>> Truncating Table: bronze.crm_prd_info'
+		Truncate table bronze.crm_prd_info
 
-		Print '>> Inserting data into: bronze2.crm_prd_info'
-		BULK insert bronze2.crm_prd_info
+		Print '>> Inserting data into: bronze.crm_prd_info'
+		BULK insert bronze.crm_prd_info
 		from 'D:\SQL Projects\Data warehousing\sql-data-warehouse-project\datasets\source_crm\prd_info.csv'
 		with (
 			Firstrow = 2,
@@ -47,11 +66,11 @@ begin
 		Print '>> load Duration:' + cast (DATEDIFF (second,@start_time, @end_time) as nvarchar) + 'Seconds' 
 		print '------' 
 
-		Print '>> Truncating Table: bronze2.crm_sales_details'
-		Truncate table bronze2.crm_sales_details
+		Print '>> Truncating Table: bronze.crm_sales_details'
+		Truncate table bronze.crm_sales_details
 
-		Print '>> Inserting data into:bronze2.crm_sales_details'
-		BULK insert bronze2.crm_sales_details
+		Print '>> Inserting data into:bronze.crm_sales_details'
+		BULK insert bronze.crm_sales_details
 		from 'D:\SQL Projects\Data warehousing\sql-data-warehouse-project\datasets\source_crm\sales_details.csv'
 		with (
 			Firstrow = 2,
@@ -63,8 +82,8 @@ begin
 		Print 'Loading ERP Table'
 		Print '-------------------------------------------------------'
 
-		truncate table bronze2.erp_CUST_AZ12
-		bulk insert bronze2.erp_CUST_AZ12
+		truncate table bronze.erp_CUST_AZ12
+		bulk insert bronze.erp_CUST_AZ12
 		from 'D:\SQL Projects\Data warehousing\sql-data-warehouse-project\datasets\source_erp\CUST_AZ12.csv'
 		with  (
 			Firstrow = 2,
@@ -73,8 +92,8 @@ begin
 		)
  
 
-		truncate table bronze2.erp_LOC_A101
-		bulk insert bronze2.erp_LOC_A101
+		truncate table bronze.erp_LOC_A101
+		bulk insert bronze.erp_LOC_A101
 		from 'D:\SQL Projects\Data warehousing\sql-data-warehouse-project\datasets\source_erp\LOC_A101.csv'
 		with (
 			Firstrow = 2,
@@ -82,8 +101,8 @@ begin
 			Tablock
 		)
 
-		truncate table bronze2.erp_PX_CAT_G1V2
-		bulk insert bronze2.erp_PX_CAT_G1V2
+		truncate table bronze.erp_PX_CAT_G1V2
+		bulk insert bronze.erp_PX_CAT_G1V2
 		from 'D:\SQL Projects\Data warehousing\sql-data-warehouse-project\datasets\source_erp\PX_CAT_G1V2.csv'
 		with (
 			Firstrow = 2,
@@ -102,4 +121,4 @@ begin
 	end catch
 end
 
-exec [bronze2].[load_bronze2]
+exec [bronze].[load_bronze]
