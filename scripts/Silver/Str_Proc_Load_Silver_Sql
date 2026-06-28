@@ -18,12 +18,23 @@ Usage quer:
 	Exec (Silver.load.silver) -name of stored procdure
 ================================================================================================================================================
 */
+
 ## --START:
 
 Create or Alter procedure Silver.Load_Silver AS
 BEGIN
+	Declare @start_time DATETIME, @end_time Datetime -- declared 2 variables with @ and assinged data types
+	begin try
+		print '======================================================='
+		print 'Loading Silver Layer'
+		print '======================================================='
 
-	#--- 1
+		Print '-------------------------------------------------------'
+		Print 'Loading CRM Table'
+		Print '-------------------------------------------------------'
+
+--- 1
+	set @start_time = getdate()
 	print '>>Truncate Table: silver.crm_cust_info:'
 	Truncate Table silver.crm_cust_info
 	print '>>Insering data into: silver.crm_cust_info:'
@@ -62,8 +73,13 @@ BEGIN
 			[bronze].[crm_cust_info]
 		) as sub
 		WHERE FLAG =1 AND cst_id IS NOT NULL	
+	
+	set @end_time = getdate()
+	Print '>> load Duration:' + cast (DATEDIFF (second,@start_time, @end_time) as nvarchar) + 'Seconds' 
+	print '------' 
 
-	#--- 2
+--- 2
+	set @start_time = getdate()
 	print '>>Truncate Table: silver.[crm_prd_info]:'
 	truncate table [Silver].[crm_prd_info]
 	print '>>Insering data into: silver.crm_prd_info:'
@@ -98,8 +114,13 @@ BEGIN
 	cast (dateadd (day, -1, lead (prd_start_dt) over (partition by prd_key order by prd_start_dt)) as date) as prd_end_dt		--calculate end date as one day before the next start date
 	from 
 		[bronze].[crm_prd_info]
+	
+	set @end_time = getdate()
+		Print '>> load Duration:' + cast (DATEDIFF (second,@start_time, @end_time) as nvarchar) + 'Seconds' 
+		print '------' 
 
-	#--- 3
+--- 3
+	set @start_time = getdate()
 	print '>>Truncate Table: silver.[crm_sales_details]:'
 	truncate table [Silver].[crm_sales_details] 
 	print '>>Insering data into: silver.crm_sales_details:'
@@ -151,8 +172,16 @@ BEGIN
 	FROM
 		[bronze].[crm_sales_details]
 
+	set @end_time = getdate()
+		Print '>> load Duration:' + cast (DATEDIFF (second,@start_time, @end_time) as nvarchar) + 'Seconds' 
+		print '------' 
 
-	#--- 4
+--- 4
+	Print '-------------------------------------------------------'
+	Print 'Loading ERP Table'
+	Print '-------------------------------------------------------'
+
+	set @start_time = getdate()
 	print '>>Truncate Table: silver.[erp_CUST_AZ12]:'
 	truncate table  [Silver].[erp_CUST_AZ12]
 	print '>>Insering data into: silver.erp_CUST_AZ12:'
@@ -176,9 +205,13 @@ BEGIN
 		Else  'N/A'
 		end as GEN
 	from [Bronze].[erp_CUST_AZ12]
+	
+	set @end_time = getdate()
+	Print '>> load Duration:' + cast (DATEDIFF (second,@start_time, @end_time) as nvarchar) + 'Seconds' 
+	print '------' 
 
-
-	#--- 5
+--- 5
+	set @start_time = getdate()
 	print '>>Truncate Table: silver.[erp_LOC_A101]:'
 	truncate table [Silver].[erp_LOC_A101] 
 	print '>>Insering data into: silver.erp_LOC_A101:'
@@ -198,8 +231,13 @@ BEGIN
 	end as cntry
 	from [bronze].[erp_LOC_A101]
 
+	set @end_time = getdate()
+		Print '>> load Duration:' + cast (DATEDIFF (second,@start_time, @end_time) as nvarchar) + 'Seconds' 
+		print '------' 
 
-	#--- 6 
+
+--- 6 
+	set @start_time = getdate()
 	print '>>Truncate Table: silver.[erp_PX_CAT_G1V2]:'
 	truncate table [Silver].[erp_PX_CAT_G1V2] 
 	print '>>Insering data into: silver.erp_PX_CAT_G1V2:'
@@ -216,4 +254,20 @@ BEGIN
 		MAINTENANCE 
 	FROM [Bronze].[erp_PX_CAT_G1V2]
 
-END
+	set @end_time = getdate()
+		Print '>> load Duration:' + cast (DATEDIFF (second,@start_time, @end_time) as nvarchar) + 'Seconds' 
+		print '------' 
+	
+	End try
+	begin catch
+		print '======================================================='
+		print 'ERROR OCCURED DURING LOADING BRONZE LAYER'
+		print 'Error Message' + error_message()
+		print 'Error Message' + cast(error_number() as nvarchar)
+		print 'Error Message' + cast(error_state() as nvarchar)
+		print '======================================================='
+
+	end catch
+end
+
+exec Silver.Load_Silver
