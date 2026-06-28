@@ -95,7 +95,7 @@ BEGIN
 		END as prd_line,						--
 
 	cast (prd_start_dt as date) as prd_start_dt,
-	cast (dateadd (day, -1, lead (prd_end_dt) over (partition by prd_key order by prd_start_dt)) as date) as prd_end_dt		--calculate end date as one day before the next start date
+	cast (dateadd (day, -1, lead (prd_start_dt) over (partition by prd_key order by prd_start_dt)) as date) as prd_end_dt		--calculate end date as one day before the next start date
 	from 
 		[bronze].[crm_prd_info]
 
