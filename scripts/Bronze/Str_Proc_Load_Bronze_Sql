@@ -32,7 +32,7 @@ begin
 		Print '-------------------------------------------------------'
 		Print 'Loading CRM Table'
 		Print '-------------------------------------------------------'
-
+--1
 		set @start_time = getdate()
 		Print '>> Truncating Table: bronze.crm_cust_info'
 		Truncate table bronze.crm_cust_info
@@ -49,7 +49,7 @@ begin
 		Print '>> load Duration:' + cast (DATEDIFF (second,@start_time, @end_time) as nvarchar) + 'Seconds' 
 		print '------' 
 
-			
+--2			
 		set @start_time = getdate()
 		Print '>> Truncating Table: bronze.crm_prd_info'
 		Truncate table bronze.crm_prd_info
@@ -66,6 +66,8 @@ begin
 		Print '>> load Duration:' + cast (DATEDIFF (second,@start_time, @end_time) as nvarchar) + 'Seconds' 
 		print '------' 
 
+--3
+		set @start_time = getdate()
 		Print '>> Truncating Table: bronze.crm_sales_details'
 		Truncate table bronze.crm_sales_details
 
@@ -77,11 +79,15 @@ begin
 			FIELDTERMINATOR = ',',
 			Tablock
 		)
+		set @end_time = getdate()
+		Print '>> load Duration:' + cast (DATEDIFF (second,@start_time, @end_time) as nvarchar) + 'Seconds' 
+		print '------' 
 
 		Print '-------------------------------------------------------'
 		Print 'Loading ERP Table'
 		Print '-------------------------------------------------------'
-
+--4
+		set @start_time = getdate()
 		truncate table bronze.erp_CUST_AZ12
 		bulk insert bronze.erp_CUST_AZ12
 		from 'D:\SQL Projects\Data warehousing\sql-data-warehouse-project\datasets\source_erp\CUST_AZ12.csv'
@@ -90,8 +96,12 @@ begin
 			FIELDTERMINATOR = ',',
 			Tablock
 		)
+		set @end_time = getdate()
+		Print '>> load Duration:' + cast (DATEDIFF (second,@start_time, @end_time) as nvarchar) + 'Seconds' 
+		print '------' 
  
-
+--5
+		set @start_time = getdate()
 		truncate table bronze.erp_LOC_A101
 		bulk insert bronze.erp_LOC_A101
 		from 'D:\SQL Projects\Data warehousing\sql-data-warehouse-project\datasets\source_erp\LOC_A101.csv'
@@ -100,7 +110,12 @@ begin
 			FIELDTERMINATOR = ',',
 			Tablock
 		)
-
+		set @end_time = getdate()
+		Print '>> load Duration:' + cast (DATEDIFF (second,@start_time, @end_time) as nvarchar) + 'Seconds' 
+		print '------' 
+	
+--6
+		set @start_time = getdate()
 		truncate table bronze.erp_PX_CAT_G1V2
 		bulk insert bronze.erp_PX_CAT_G1V2
 		from 'D:\SQL Projects\Data warehousing\sql-data-warehouse-project\datasets\source_erp\PX_CAT_G1V2.csv'
@@ -109,6 +124,9 @@ begin
 			FIELDTERMINATOR = ',',
 			Tablock
 		)
+		set @end_time = getdate()
+		Print '>> load Duration:' + cast (DATEDIFF (second,@start_time, @end_time) as nvarchar) + 'Seconds' 
+		print '------' 
 	End try
 	begin catch
 		print '======================================================='
