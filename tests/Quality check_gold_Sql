@@ -22,7 +22,7 @@ Usage Notes.
 ============================================================================
 -- check for the uniquess of customer key in gold.dim_customers
 -- Expectations: No results
-
+												-- CUSTOMER (DIM)
 
 -- checking for the duplicates in primary key or not 
 select cst_id, count(*) from(
@@ -92,7 +92,7 @@ from
 
  select distinct gender from gold.dim_customer  --Qulaity Checking.
  -----------------
-
+										-- PRODUCT (DIM)
  select 
 	pn.prd_id,
 	pn.cat_id,
@@ -106,7 +106,7 @@ from
 	pc.MAINTENANCE
  from [Silver].[crm_prd_info] pn
  left join [silver].[erp_PX_CAT_G1V2] pc on pn.cat_id = pc.ID 
- where prd_end_dt is null			-- Filter out all historical data (no need history)
+ where prd_end_dt is null			-- Filter out all historical data (no need history DATA)
 
 -- -------------------
 -- quality check
@@ -126,7 +126,7 @@ having count(*)> 1 --now working (first in silver of prd -  lead(prd_end-date) s
 					-- lead(start_date) good, because we need updated record. 
 
 
-SELECT *				--checking duplicate for this prd_key, then able to find (we wad taking 1 row, but lead by end_Date
+SELECT *							--checking duplicate for this prd_key, then able to find (we wad taking 1 row, but lead by end_Date
 FROM silver.crm_prd_info			-- was giving more than 2 row
 WHERE prd_key = 'HB-M243'
 ORDER BY prd_start_dt;
