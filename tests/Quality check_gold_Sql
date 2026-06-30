@@ -24,7 +24,7 @@ Usage Notes.
 -- Expectations: No results
 												-- CUSTOMER (DIM)
 
--- checking for the duplicates in primary key or not 
+1 -- checking for the duplicates in primary key or not 
 select cst_id, count(*) from(
 select 
 	ci.cst_id,
@@ -92,7 +92,8 @@ from
 
  select distinct gender from gold.dim_customer  --Qulaity Checking.
  -----------------
-										-- PRODUCT (DIM)
+
+2-- 										-- PRODUCT (DIM)
  select 
 	pn.prd_id,
 	pn.cat_id,
@@ -152,12 +153,12 @@ create view gold.dim_products as
  where prd_end_dt is null
 
 ------------------------------------------------
-
+3--												--fact_Sales
 Create view Gold.fact_sales AS 
 select 
 	sd.sls_ord_num as order_number,
 	pr.Product_key,
-	cu.customer_key,
+	cu.customer_key,						-- adding up these columns, becuase these keys are now seconday (coming from primary-dimensions table)
 	-- sd.sls_prd_key as prd_number		//fact table, SECONDAY KEY is get from Dimension table (product), it's primary key
 	-- sd.sls_cust_id,						--//same as above
 	sd.sls_order_dt as order_date,
@@ -191,7 +192,4 @@ on f.customer_key = c.customer_key
 left join gold.dim_products p
 on f.Product_key = p.Product_key
 
-select 
-								
 
-from gold.fact_sales
