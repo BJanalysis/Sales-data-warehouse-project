@@ -1,4 +1,4 @@
--- view create:
+--#1: Customer View:
 create view  gold.dim_customer  as
 select 
 	ROW_NUMBER() over(order by cst_id) as customer_key, 
@@ -23,48 +23,7 @@ from
 	on  ci.cst_key  = la.CID
  ----------------------
 
-
- select 
-	pn.prd_id,
-	pn.cat_id,
-	pn.prd_key,
-	pn.prd_nm,
-	pn.prd_cost,
-	pn.prd_line,
-	pn.prd_start_dt,
-	pc.CAT,
-	pc.SUBCAT,
-	pc.MAINTENANCE
- from [Silver].[crm_prd_info] pn
- left join [silver].[erp_PX_CAT_G1V2] pc on pn.cat_id = pc.ID 
- where prd_end_dt is null			-- Filter out all historical data (no need history)
-
--- -------------------
--- quality check
-select prd_key, count(*) from (
- select 
-	pn.prd_id, pn.cat_id, pn.prd_key, pn.prd_nm, pn.prd_cost, pn.prd_line,
-	pn.prd_start_dt,
-	pc.CAT,
-	pc.SUBCAT,
-	pc.MAINTENANCE
- from [Silver].[crm_prd_info] pn
- left join [silver].[erp_PX_CAT_G1V2] pc on pn.cat_id = pc.ID 
- where prd_end_dt is null
-) as t
-group by prd_key
-having count(*)> 1 --now working (first in silver of prd -  lead(prd_end-date) so duplicate was here
-					-- lead(start_date) good, because we need updated record. 
-
-
-SELECT *				--checking duplicate for this prd_key, then able to find (we wad taking 1 row, but lead by end_Date
-FROM silver.crm_prd_info			-- was giving more than 2 row
-WHERE prd_key = 'HB-M243'
-ORDER BY prd_start_dt;
-
-
---- rearrange and creation of view.
-
+--#2: Product View.
 create view gold.dim_products as 
  select   
 	row_number() over (order by pn.prd_start_dt, pn.prd_key ) as Product_key, -- each row descibing object (so it's dimension table). For that we made primary key
@@ -81,9 +40,9 @@ create view gold.dim_products as
  from [Silver].[crm_prd_info] pn
  left join [silver].[erp_PX_CAT_G1V2] pc on pn.cat_id = pc.ID 
  where prd_end_dt is null
+----------------------
 
-------------------------------------------------
-
+--#3: Sales View								--(it's only 1 table, so no need to join this table with anyother.)
 Create view Gold.fact_sales AS 
 select 
 	sd.sls_ord_num as order_number,
@@ -104,25 +63,3 @@ left join Gold.dim_customer as cu
 on sd.sls_cust_id = cu.customer_id
 
 -----
--- Foreign key integrity (Dimension)
-
-select * from gold.fact_sales f
-left join gold.dim_customer c 
-on f.customer_key = c.customer_key
-where c.customer_key is null
-
-select * from gold.fact_sales f
-left join gold.dim_products p
-on f.Product_key = p.Product_key
-where p.Product_key is null
-
-select * from gold.fact_sales f
-left join gold.dim_customer c 
-on f.customer_key = c.customer_key
-left join gold.dim_products p
-on f.Product_key = p.Product_key
-
-select 
-								
-
-from gold.fact_sales
