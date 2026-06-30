@@ -1,41 +1,3 @@
-select 
-	ci.cst_id,
-	ci.cst_key,
-	ci.cst_firstname,
-	ci.cst_lastname,
-	ci.cst_marital_status,
-	ci.cst_gndr,
-	ci.cst_create_date,
-	ca.BDATE,
-	ca.GEN,
-	la.CNTRY
-
-from  
-	[Silver].[crm_cust_info] as ci
-	left join [silver].[erp_CUST_AZ12] as ca
-	on ci.cst_key = ca.CID
-	left join [Silver].[erp_LOC_A101] as la
-	on  ci.cst_key  = la.CID
-
-
-----------------------------------------
-
-select distinct
-	ci.cst_gndr,
-	ca.GEN,
-	case 
-		when ci.cst_gndr !='n/a' then ci.cst_gndr			--CRM IS THE MASTER FOR GENDER INFO
-		else COALESCE(ca.GEN,'n/a')
-	end as new_gen
-from  
-	[Silver].[crm_cust_info] as ci
-	left join [silver].[erp_CUST_AZ12] as ca
-	on ci.cst_key = ca.CID
-	left join [Silver].[erp_LOC_A101] as la
-	on  ci.cst_key  = la.CID
-
-order by 1,2
----------------------------
 -- view create:
 create view  gold.dim_customer  as
 select 
@@ -61,8 +23,6 @@ from
 	on  ci.cst_key  = la.CID
  ----------------------
 
- select distinct gender from gold.dim_customer
- -----------------
 
  select 
 	pn.prd_id,
