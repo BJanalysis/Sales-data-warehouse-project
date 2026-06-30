@@ -68,7 +68,7 @@ order by 1,2
 -- view create:
 create view  gold.dim_customer  as
 select 
-	ROW_NUMBER() over(order by cst_id) as customer_key, 
+	ROW_NUMBER() over(order by cst_id) as customer_key, 	-- Surrogate key Generated here (it will be our primary key)
 	ci.cst_id as customer_id,
 	ci.cst_key as customer_number,
 	ci.cst_firstname as first_name,
@@ -90,7 +90,7 @@ from
 	on  ci.cst_key  = la.CID
  ----------------------
 
- select distinct gender from gold.dim_customer
+ select distinct gender from gold.dim_customer  --Qulaity Checking.
  -----------------
 
  select 
