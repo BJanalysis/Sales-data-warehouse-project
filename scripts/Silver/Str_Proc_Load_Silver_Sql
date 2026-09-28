@@ -249,8 +249,8 @@ BEGIN
 
 	SELECT  
 		ID,
-		CAT, 
 		SUBCAT,
+		CAT,
 		MAINTENANCE 
 	FROM [Bronze].[erp_PX_CAT_G1V2]
 
